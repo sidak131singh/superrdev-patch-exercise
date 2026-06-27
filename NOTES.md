@@ -2,6 +2,10 @@
 
 ## Summary of Changes
 
+**Change 6 — Sort order: oldest first (Low):** `TaskRepository.java`, `search_tasks.sql`, `task_search_package.sql` — changed `ORDER BY created_at DESC` to `ASC` so task ID 1 (oldest) appears first and ID 49 (newest) last. Matches the natural expectation of a task list read top-to-bottom in creation order.
+
+**Change 7 — Restore page on search clear (Low):** `App.jsx` — when the user starts typing a search the current page is saved in a `useRef`; when the search is fully cleared (backspace to empty) the saved page is restored. Previously clearing the search always jumped to page 1 regardless of where the user was browsing.
+
 **Bug 1 — SQL operator precedence (High):** `TaskRepository.java`, `search_tasks.sql`, and the Oracle package all had a missing parenthesis around the `OR` condition. Because `AND` binds tighter than `OR`, the `archived = FALSE` filter only applied to title matches and the `status` filter only applied to description matches. Archived tasks leaked into results, and the status dropdown was effectively ignored for title-matched rows. Fix: wrapped both `LIKE` conditions in parentheses.
 
 **Bug 2 — Artificial `Thread.sleep` delay (High):** `TaskController.java` slept up to 1000 ms per request (longer for shorter queries). The empty-search on initial page load incurred the full 1-second penalty. Removed the sleep and the dead variables entirely.

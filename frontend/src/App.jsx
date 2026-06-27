@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import SearchBar from './components/SearchBar';
 import StatusFilter from './components/StatusFilter';
 import TaskTable from './components/TaskTable';
@@ -8,14 +8,25 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const preSearchPage = useRef(1);
 
   const { tasks, total, loading, error } = useTasks(query, status, page, 10);
 
   const totalPages = Math.ceil(total / 10);
 
   function handleQueryChange(value) {
+    if (value && !query) {
+      // Search starting — remember current page, jump to 1
+      preSearchPage.current = page;
+      setPage(1);
+    } else if (!value && query) {
+      // Search cleared — restore the page we were on before searching
+      setPage(preSearchPage.current);
+    } else if (value) {
+      // Continuing to refine search — stay on page 1
+      setPage(1);
+    }
     setQuery(value);
-    setPage(1);
   }
 
   function handleStatusChange(value) {

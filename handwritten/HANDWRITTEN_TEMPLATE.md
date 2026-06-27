@@ -57,3 +57,25 @@ photograph it, and replace this file with the image(s) placed in this `handwritt
 - **Root cause:** No debounce mechanism — the effect re-runs on every render caused by `query` changing.
 - **Fix implemented:** Wrapped `fetchTasks` in a `setTimeout` of 300 ms and returned a cleanup function that calls `clearTimeout`. The effect cancels the pending timer whenever `query` changes before 300 ms elapses.
 - **Why this approach:** Native `setTimeout`/`clearTimeout` with no new dependencies. 300 ms is a standard debounce window — responsive but not noisy.
+
+---
+
+## Change 6 — Sort Order: Oldest First
+
+- **File(s) / Layer:** `backend/src/main/java/com/internal/tasktracker/TaskRepository.java`; also `db/queries/search_tasks.sql` and `db/oracle/task_search_package.sql`
+- **Where the change is:** The `ORDER BY` clause in every SQL query
+- **How it was discovered:** The UI showed task ID 49 at the top and ID 1 at the bottom — reverse chronological order, which is counter-intuitive for a task tracker where you want to see the oldest (first-created) tasks first
+- **Root cause:** `ORDER BY created_at DESC` was used in the original query
+- **Fix implemented:** Changed to `ORDER BY created_at ASC` in all three SQL locations
+- **Why this approach:** One-word change per file, no structural impact. ASC order matches the natural expectation of reading a task list created sequentially from top to bottom.
+
+---
+
+## Change 7 — Restore Page When Search Is Cleared
+
+- **File(s) / Layer:** `frontend/src/App.jsx`
+- **Where the change is:** `handleQueryChange` function
+- **How it was discovered:** Navigating to page 3, typing a search query (which correctly resets to page 1), then clearing the search — the page stayed at 1 instead of returning to page 3
+- **Root cause:** The earlier fix that resets `page` to 1 on every `query` change also triggered when the query was cleared back to empty, discarding the user's navigation position
+- **Fix implemented:** Added a `useRef` (`preSearchPage`) to remember the page at the moment the user starts typing. When the query transitions from non-empty back to empty (search cleared), `setPage(preSearchPage.current)` restores it. When refining mid-search, page stays at 1.
+- **Why this approach:** `useRef` persists across renders without causing extra renders, making it the right tool for storing a side-effect-free "memory" value. The logic covers three cases explicitly: search start (save + jump to 1), search clear (restore), mid-type (stay at 1).

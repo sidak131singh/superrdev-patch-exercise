@@ -65,7 +65,7 @@ CREATE OR REPLACE PACKAGE BODY task_search_pkg AS
                          WHERE archived = 0
                            AND (LOWER(title) LIKE v_term OR LOWER(description) LIKE v_term)
                            AND (p_status IS NULL OR status = p_status)
-                         ORDER BY created_at DESC
+                         ORDER BY created_at ASC
                     ) t
                    WHERE ROWNUM <= v_offset + p_page_size
               )
